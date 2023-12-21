@@ -327,14 +327,15 @@ export default function DesktopAnalysisView() {
   const bindEventListener = () => {
     window.addEventListener("message", handleEventTrigger);
   };
-
   const otherInfo = {
+    form_name: formDataFromApi?.form_name,
     instituteId: formDataFromApi?.institute?.id,
     instituteName: formDataFromApi?.institute?.name,
     course_applied: formDataFromApi?.institute?.course_applied,
     formId: formId,
     course_type: formDataFromApi?.course_type,
     course_level: formDataFromApi?.course_level,
+    course_name: formDataFromApi?.course?.course_name,
     round: formDataFromApi?.round,
   };
 
@@ -436,9 +437,12 @@ export default function DesktopAnalysisView() {
             input.disabled = true;
           });
         }
-
         iframeContent.getElementById("submit-form").style.display = "none";
       }
+      // manipulate span element text content
+      const buttonElement = document.getElementById('submit-form');
+      const spanElement = buttonElement.children[1];
+      spanElement.textContent = 'Return to applicant';
 
       // Need to work on Save draft...
       iframeContent.getElementById("save-draft").style.display = "none";

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import { Stepper, Step } from "@material-tailwind/react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { GrDocumentPdf } from "react-icons/gr";
 import { AiOutlineClose } from "react-icons/ai";
 import { ContextAPI } from "../../utils/ContextAPI";
@@ -21,7 +20,6 @@ import {
 } from "../../utils/common";
 import {
   getUsersForScheduling,
-  getAllTheCourses,
   getScheduleAssessment,
   addInstituteCourse,
   registerEvent,
@@ -30,9 +28,8 @@ import {
   sendPushNotification,
   sendEmailNotification,
   getAllRegulatorDeviceId,
+  getAssessorFormData
 } from "../../api";
-
-// import Toast from "../../components/Toast";
 
 function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
   const [activeStep, setActiveStep] = React.useState(0);
@@ -41,8 +38,6 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
   const { setSpinner, setToast } = useContext(ContextAPI);
   const { formId } = useParams();
   const navigate = useNavigate();
-  const handleNext = () => !isLastStep && setActiveStep((cur) => cur + 1);
-  const handlePrev = () => !isFirstStep && setActiveStep((cur) => cur - 1);
   const userDetails = getCookie("userData");
 
   // Common state variables...
@@ -63,7 +58,13 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
   const [selectedFormList, setSelectedFormList] = useState([]);
 
   useEffect(() => {
-    getTheCourses();
+    if (otherInfo?.form_name?.includes("applicant")) {
+      otherInfo.form_name = `${otherInfo?.form_name?.replace("applicant", "on-ground_assessor")}.xml`;
+    }
+    console.log("otherInfo =>", otherInfo);
+    if(otherInfo !== undefined) {
+      getAssessorForms();
+    }
     handleOnChangeDate(new Date());
   }, []);
 
@@ -126,22 +127,22 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
     setSelectedAA(AAObject);
   };
 
-  const getTheCourses = async () => {
+  const getAssessorForms = async () => {
     let payload = {
-      course_type: otherInfo?.course_type,
-      course_level: otherInfo?.course_level,
+      title: otherInfo?.course_name,
+      assignee: "on-ground_assessor",
+      file_name: otherInfo.form_name
     };
-
     try {
       setSpinner(true);
-      const res = await getAllTheCourses(payload);
-      setFormList(
-        res?.data?.courses?.map((item) => ({
-          value: item.course_name,
-          label: item.course_name,
-          level: item.course_level,
-          formObj: item.formObject,
-          course_id: item.course_id,
+      const res = await getAssessorFormData(payload);
+      setSelectedFormList(
+        res?.data?.forms?.map((item) => ({
+          value: item.courses[0].course_name,
+          label: item.courses[0].course_name,
+          level: item.courses[0].course_level,
+          formObj: item.courses[0].formObject,
+          course_id: item.courses[0].course_id,
         }))
       );
     } catch (error) {
@@ -151,9 +152,7 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
     }
   };
 
-  const handleFormSelection = (e) => {
-    setSelectedFormList(e);
-  };
+  console.log(formList);
 
   const handleScheduleAssessment = async () => {
     let coursesObj = selectedFormList.map((obj) => {
@@ -314,58 +313,10 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
       <div className="flex flex-col justify-center items-center fixed inset-0 bg-opacity-24 z-10 backdrop-blur-sm">
         <div className="flex bg-white rounded-xl shadow-xl border border-gray-400 w-[900px] h-fit">
           <div className="flex flex-col w-full">
-            <div className="flex p-4">
-              <div className="flex flex-col items-center w-full">
-                {/* <div className="w-[40%] p-3"> */}
-                {/* <div
-                  className="flex flex-col" */}
-                {/* activeStep={activeStep}
-                 isLastStep={(value) => setIsLastStep(value)}
-                   isFirstStep={(value) => setIsFirstStep(value)} */}
-                {/* > */}
-                <div className="flex flex-row gap-2 items-center w-[40%] p-3">
-                  <div
-                    className={`${
-                      activeStep == 1
-                        ? "flex items-center bg-gray-300 text-white justify-center text-[18px] font-bold rounded-[50%] h-[48px] w-[48px] p-5"
-                        : "flex items-center bg-blue-500 text-white justify-center text-[18px] font-bold rounded-[50%] h-[48px] w-[48px] p-5"
-                    }`}
-                    // className="flex items-center bg-blue-500 text-white justify-center text-[18px] font-bold rounded-[50%] h-[48px] w-[48px] p-5"
-                  >
-                    1
-                  </div>
-                  <span className="w-full h-0 border-t-[2px] border-gray-500"></span>
-                  <div
-                    className={`${
-                      activeStep == 0
-                        ? "flex items-center bg-gray-300 text-white justify-center text-[18px] font-bold rounded-[50%] h-[48px] w-[48px] p-5"
-                        : "flex items-center bg-blue-500 text-white justify-center text-[18px] font-bold rounded-[50%] h-[48px] w-[48px] p-5"
-                    }`}
-                    // className="flex items-center text-white bg-blue-500 justify-center text-[18px] font-bold rounded-[50%] h-[48px] w-[48px] p-5"
-                  >
-                    2
-                  </div>
-                </div>
-
-                {/* </div> */}
-                {/* </div> */}
-                {/* <div className="w-[60%] p-2"> */}
-                <div className="flex flex-row w-[48%] justify-between">
-                  <div className="flex font-semibold justify-center text-[#000]">
-                    Schedule inspection
-                  </div>
-                  <div className="flex font-semibold justify-center text-[#000]">
-                    Select the applications
-                  </div>
-                </div>
-                {/* </div> */}
-              </div>
-            </div>
-
             <div className="flex flex-col p-4 border-t-gray-300 border-2 rounded-b-xl">
               <section>
                 {activeStep === 0 && (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
                     <div className="flex text-xl font-semibold">
                       Schedule the inspection
                     </div>
@@ -519,71 +470,36 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
                             })}
                           </div>
                         </div>
+                        
                       </div>
+                    
                     </div>
-                  </div>
-                )}
-              </section>
-
-              <section>
-                {activeStep === 1 && (
-                  <div className="flex flex-col gap-4">
-                    <div className="flex text-xl font-semibold">
-                      Select the applications
+                      {/* choose form */}
+                      <div className="flex flex-col gap-2">
+                    <div className="flex text-lg font-semibold">
+                            Available Assessor Form
                     </div>
 
                     <div className="flex flex-col gap-3 w-full">
-                      <div className="flex flex-col rounded-xl border border-gray-400 p-4 gap-3">
-                        <Label
-                          htmlFor={"institute_name"}
-                          required
-                          text="Form filled by the institute"
-                          moreClass="text-[16px]"
-                        ></Label>
-
-                        <div className="bg-gray-100 items-center flex gap-4 border border-gray-100 rounded-md">
-                          <span className="font-semibold p-2">
-                            {otherInfo?.course_type} - {otherInfo?.course_level}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3 rounded-xl border border-gray-400 p-4">
-                        <Label
-                          required
-                          text="Select forms"
-                          moreClass="text-[16px]"
-                        ></Label>
-
-                        <div className="flex flex-row">
-                          <Select
-                            isMulti
-                            key={"form_name"}
-                            name="form_name"
-                            label="Form Name"
-                            onChange={handleFormSelection}
-                            options={formList}
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          />
-                        </div>
-
+                      <div className="flex flex-col gap-3 rounded-xl border border-gray-400 p-2">
                         <div className="flex flex-col gap-3 max-h-[120px] overflow-auto">
-                          {selectedFormList.map((form, index) => {
-                            return (
+                          {selectedFormList.length > 0 ? <>
+                          {selectedFormList.map((form, index) => 
+                            (
                               <div
                                 className="flex items-center bg-gray-100 border border-gray-100 rounded-md font-semibold"
-                                key={index}
                               >
                                 <div className="flex w-[36px] h-[36px] items-center justify-center">
                                   <GrDocumentPdf />
                                 </div>
                                 <div>{form.label}</div>
                               </div>
-                            );
-                          })}
+                            )
+                          )}</>: <p style={{color: 'red'}}>No assessor forms available for the current applicant form. Please create a form to schedule inspection</p>}
                         </div>
                       </div>
                     </div>
+                  </div>
                   </div>
                 )}
               </section>
@@ -598,28 +514,7 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
                       moreClass={`px-8 border border-primary-500 bg-white text-primary-500`}
                       text="Close"
                     ></Button>
-                    <Button
-                      onClick={handleNext}
-                      otherProps={{
-                        disabled: selectedOGA?.value ? false : true,
-                      }}
-                      moreClass={`${
-                        selectedOGA?.value
-                          ? "px-8 text-white"
-                          : "cursor-not-allowed border border-gray-500 bg-white text-gray-500 px-8 h-[44px]"
-                      }`}
-                      text="Next"
-                    ></Button>
-                  </div>
-                )}
-                {activeStep === 1 && (
-                  <div className="flex flex-row w-full justify-between">
-                    <Button
-                      onClick={handlePrev}
-                      moreClass={`px-8 border border-primary-500 bg-white text-primary-500`}
-                      text="Previous"
-                    ></Button>
-                    <Button
+                      <Button
                       onClick={handleScheduleAssessment}
                       otherProps={{
                         disabled:

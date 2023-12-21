@@ -78,6 +78,7 @@ const API_URL = {
     addInstituteCourse: `${rest}addInstituteCourse`,
     updatePaymentStatus: `${rest}updatePaymentStatus`,
     getTransactionDetail: `v1/user/transaction`,
+    getOGAFormDetails: `${rest}getOGAFormForInspectionSchedule`
   },
   certificateManagement: {
     getNOCCertificate: `${rest}getNOCCertificate`,

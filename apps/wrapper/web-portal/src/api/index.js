@@ -304,6 +304,14 @@ export const addInstituteCourse = async (postData) => {
   );
   return res;
 };
+
+export const getAssessorFormData = async (postData) => {
+  const res = await adminCustomPost.post(
+    API_URL.desktopAnalysis.getOGAFormDetails,
+    postData
+  );
+  return res;
+}
 export const getDesktopAnalysisForms = async (postData) => {
   const res = await adminCustomPost.post(
     API_URL.desktopAnalysis.getDesktopAnalysisForms,
@@ -319,6 +327,7 @@ export const getAllTheCourses = async (postData) => {
   );
   return res;
 };
+
 
 export const filterDesktopAnalysis = async (postData) => {
   const res = await adminCustomPost.post(
