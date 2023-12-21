@@ -16,10 +16,10 @@ import {
   deleteSchedule,
   getScheduledList,
   sendEmailNotification,
+  exportToExcel
 } from "../../api";
 import {
   setToLocalForage,
-  removeItemFromLocalForage,
   getFromLocalForage,
 } from "../../forms";
 import ADMIN_ROUTE_MAP from "../../routes/adminRouteMap";
@@ -315,6 +315,22 @@ const ScheduleManagementList = () => {
     }
   };
 
+  const downloadTemplate = async () => {
+    const dashBoardReports = {
+      sheetName: 'report',
+      downloadObject: [],
+      headers: ['DISTRICT', 'PARENT CENTER CODE', 'CHILD CENTER CODE', 'INSTITUTE NAME', 'ASSESSMENT DATE', 'ASSESSMENT IDS', 'STATUS']
+    }
+    
+   // const roundName = round === 1 ? 'Round One' : 'Round Two'
+    const downloadObjects = {
+      fileName: `${ formatDate(new Date()) }_schedules.xlsx`,
+      objectsList: [dashBoardReports]
+    }
+    exportToExcel(downloadObjects);
+
+  }
+
   useEffect(() => {
     if (!isSearchOpen && !isFilterOpen) {
       fetchAllAssessmentSchedule();
@@ -331,12 +347,23 @@ const ScheduleManagementList = () => {
         <AlertModal showAlert={setShowAlert} {...state.alertContent} />
       )}
       <Nav />
+      
       <div className={`container m-auto min-h-[calc(100vh-148px)] px-3 py-12`}>
+    {/*   <div className="sm:col-span-3 flex justify-end">
+              <Button
+                onClick={() => {
+                  downloadTemplate();
+                }}
+                moreClass="border boevent_namerder-blue-500 bg-white text-blue-500 w-[160px]"
+                text="Download Template"
+              ></Button>
+              </div> */}
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-4">
             <div className="flex flex-row">
               <div className="flex flex-grow items-center">
                 {/* <div className="text-xl font-semibold">Schedule Management</div> */}
+                
               </div>
               <div className="flex flex-grow justify-end">
                 {/* <span className="flex gap-4">

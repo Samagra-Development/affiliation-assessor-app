@@ -340,78 +340,100 @@ export default function DesktopAnalysisView() {
   };
 
   const desktopVerification = async () => {
-    updatePaymentStatus({ form_id: formId, payment_status: "Pending" });
-    registerEvent({
-      created_date: getLocalTimeInISOFormat(),
-      entity_id: formId,
-      entity_type: "form",
-      event_name: "DA Completed",
-      remarks: `${
-        getCookie("regulator")[0]["full_name"]
-      } has completed the Desktop Analysis`,
-    });
 
-    updateFormStatus({
-      form_id: formId * 1,
-      form_status: "DA Completed",
-    });
-    if (getCookie("firebase_client_token") !== undefined) {
-      // regulator
-      const regAPIRes = await getAllRegulatorDeviceId();
-      let regDeviceIds = [];
-      regAPIRes?.data?.regulator?.forEach((item) => {
-        let tempIds = JSON.parse(item.device_id);
-        let tempIdsFilter = tempIds.filter(function (el) {
-          return el != null;
-        });
-        if (tempIdsFilter.length) {
-          regDeviceIds.push({
-            user_id: item.user_id,
-            device_id: tempIdsFilter[0],
-          });
-        }
+    try {
+      updatePaymentStatus({ form_id: formId, payment_status: "Pending" });
+      registerEvent({
+        created_date: getLocalTimeInISOFormat(),
+        entity_id: formId,
+        entity_type: "form",
+        event_name: "DA Completed",
+        remarks: `${
+          getCookie("regulator")[0]["full_name"]
+        } has completed the Desktop Analysis`,
       });
-
-      console.log("regulator device ids-", regDeviceIds);
-      if (regDeviceIds.length) {
-        regDeviceIds.forEach((regulator) =>
-          sendPushNotification({
-            title: "Desktop Analysis Done",
-            body: `The desktop analysis for ${formDataFromApi?.institute?.name}'s application has been completed. Kindly review the results.`,
-            // deviceToken: [`${getCookie("firebase_client_token")}`],
-            deviceToken: [regulator.device_id],
-            userId: regulator.user_id,
-          })
-        );
-      }
-
-      // applicant
-      const applicantRes = await getApplicantDeviceId({
-        institute_id: formDataFromApi?.institute?.id,
-      });
-      if (applicantRes?.data) {
-        let tempIds = JSON.parse(
-          applicantRes?.data?.institutes[0]?.institute_pocs[0]?.device_id
-        );
-        let tempIdsFilter = tempIds.filter(function (el) {
-          return el != null;
-        });
-        if (tempIdsFilter.length) {
-          sendPushNotification({
-            title: "Application Review",
-            body: `Your application is reviewed by the UPSMF representative. Kindly make the payment for further process.`,
-            deviceToken: tempIdsFilter,
-            userId:
-              applicantRes?.data?.institutes[0]?.institute_pocs[0]?.user_id,
+  
+      await updateFormStatus({
+        form_id: formId * 1,
+        form_status: "DA Completed",
+        updated_at: getLocalTimeInISOFormat()
+      });/* .then((res) => {
+        if(res.status === 200){
+          setToast((prevState) => ({
+            ...prevState,
+            toastOpen: true,
+            toastMsg: "Form approved successfully",
+            toastType: "success",
+          }));
+        }
+      }); */
+      if (getCookie("firebase_client_token") !== undefined) {
+        // regulator
+        const regAPIRes = await getAllRegulatorDeviceId();
+        let regDeviceIds = [];
+        regAPIRes?.data?.regulator?.forEach((item) => {
+          const tempIds = JSON.parse(item.device_id);
+          const tempIdsFilter = tempIds.filter(function (el) {
+            return el != null;
           });
+          if (tempIdsFilter.length) {
+            regDeviceIds.push({
+              user_id: item.user_id,
+              device_id: tempIdsFilter[0],
+            });
+          }
+        });
+  
+        console.log("regulator device ids-", regDeviceIds);
+        if (regDeviceIds.length) {
+          regDeviceIds.forEach((regulator) =>
+            sendPushNotification({
+              title: "Desktop Analysis Done",
+              body: `The desktop analysis for ${formDataFromApi?.institute?.name}'s application has been completed. Kindly review the results.`,
+              // deviceToken: [`${getCookie("firebase_client_token")}`],
+              deviceToken: [regulator.device_id],
+              userId: regulator.user_id,
+            })
+          );
+        }
+  
+        // applicant
+        const applicantRes = await getApplicantDeviceId({
+          institute_id: formDataFromApi?.institute?.id,
+        });
+        if (applicantRes?.data) {
+          let tempIds = JSON.parse(
+            applicantRes?.data?.institutes[0]?.institute_pocs[0]?.device_id
+          );
+          let tempIdsFilter = tempIds.filter(function (el) {
+            return el != null;
+          });
+          if (tempIdsFilter.length) {
+            sendPushNotification({
+              title: "Application Review",
+              body: `Your application is reviewed by the UPSMF representative. Kindly make the payment for further process.`,
+              deviceToken: tempIdsFilter,
+              userId:
+                applicantRes?.data?.institutes[0]?.institute_pocs[0]?.user_id,
+            });
+          }
         }
       }
+  
+      setTimeout(
+        () => navigate(`${ADMIN_ROUTE_MAP.adminModule.desktopAnalysis.home}`),
+        1500
+      );
+    } catch (error) {
+      setToast((prevState) => ({
+        ...prevState,
+        toastOpen: true,
+        toastMsg: "Something went wrong. Please try again later.",
+        toastType: "error",
+      }));
     }
 
-    setTimeout(
-      () => navigate(`${ADMIN_ROUTE_MAP.adminModule.desktopAnalysis.home}`),
-      1500
-    );
+  
   };
 
   const checkIframeLoaded = () => {

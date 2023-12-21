@@ -2,8 +2,7 @@ import React, { useEffect } from "react";
 import { Card, Button } from "./index";
 import { generate_uuidv4, getCookie, readableDate, removeCookie, setCookie } from "../utils";
 import { applicantService } from "../services";
-import { useNavigate } from "react-router-dom";
-
+import paymentConfigPostData from '../payment-config/config.json';
 const ApplicationCard = (props) => {
   let formName = props?.application?.course?.course_name?.trim() || "NA";
 
@@ -13,7 +12,7 @@ const ApplicationCard = (props) => {
     setCookie("payment_ref_no",refNo)
     const instituteDetails = getCookie("institutes");
     const instituteId = instituteDetails?.[0]?.id;
-    const postData = {
+    /* const postData = {
       endpoint: "https://eazypayuat.icicibank.com/EazyPG",
       returnUrl: "https://payment.uphrh.in/api/v1/user/payment",
       paymode: "9",
@@ -39,9 +38,10 @@ const ApplicationCard = (props) => {
         refundStatus: "x",
       },
       optionalFields: "",
-    };
+    }; */
     try {
-      const paymentRes = await applicantService.initiatePayment(postData);
+      const paymentRes = await applicantService.initiatePayment(paymentConfigPostData);
+      await applicantService.savePaymentRefNumber(paymentRes?.data?.referenceNo);
       await window.open(paymentRes?.data?.redirectUrl);
     } catch (error) {}
   };

@@ -7,18 +7,20 @@ import FilteringTable from "../../components/table/FilteringTable";
 import Nav from "../../components/Nav";
 import { getCookie } from "../../utils";
 import { ContextAPI } from "../../utils/ContextAPI";
+import { Button } from "../../components";
+
 
 import {
   filterDesktopAnalysis,
   getDesktopAnalysisForms,
   markReviewStatus,
   searchDesktop,
-  registerEvent,
   getTransactionDetail,
+  exportToExcel
 } from "../../api";
 import {
-  getFieldName,
   readableDate,
+  formatDate,
   getLocalTimeInISOFormat,
 } from "../../utils/common";
 import ADMIN_ROUTE_MAP from "../../routes/adminRouteMap";
@@ -41,7 +43,7 @@ const DesktopAnalysisList = () => {
   const [paymentModal, setPaymentModal] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const { setSpinner } = useContext(ContextAPI);
+  const { setSpinner, setToast } = useContext(ContextAPI);
   const [selectedRound, setSelectedRound] = useState(1);
   const [viewPaymentModal, setViewPaymentModal] = useState({
     flag: false,
@@ -323,6 +325,65 @@ const DesktopAnalysisList = () => {
     }));
   };
 
+  const downloadReport = async () => {
+    console.log("here")
+    if (paginationInfo.totalCount > 0) {
+      const postData = {
+        formStatus: "DA Completed",
+        offsetNo: 0,
+        limit: paginationInfo.totalCount,
+        round: selectedRound
+      };
+      try {
+        setSpinner(true);
+        const res = await getDesktopAnalysisForms(postData);
+        // setFormsList(res?.data?.form_submissions);
+        //console.log('DesktopAnalysisForms: ', res?.data?.form_submissions);
+        const daCompletedFormsReport = {
+          sheetName: 'report',
+          downloadObject: [],
+          headers: ['FORM ID','FORM TITLE',	'APPLICATION TYPE',	'COURSE TYPE','DATE',	'FORM STATUS'	,'PAYMENT STATUS','ASSESSOR ID']
+          
+        }
+       
+        res?.data?.form_submissions.forEach((element) => {
+         
+          if(element?.payment_status === "Paid"){
+            const report = {
+              form_id: element.form_id,
+              form_title: element.course.course_name,
+              application_type:  element.course.application_type || "-",
+              course_type: element?.course_type || "-",
+              date: element?.submitted_on || "-",
+             // course_level: element?.course_level || "-",
+              form_status: element?.form_status,
+              payment_status: element?.payment_status || "-",
+            }
+            daCompletedFormsReport.downloadObject.push(report)
+          }
+        })
+        const arr = daCompletedFormsReport.downloadObject
+        daCompletedFormsReport.downloadObject = arr.sort((p1, p2) => (p1.date < p2.date) ? 1 : (p1.date > p2.date) ? -1 : 0);
+       // const roundName = selectedRound === 1 ? 'Round One' : 'Round Two'
+        const downloadObjects = {
+          fileName: `${formatDate(new Date())}_DA_COMPLETED.xlsx`,
+          objectsList: [daCompletedFormsReport]
+        }
+        exportToExcel(downloadObjects);
+        setSpinner(false);
+      } catch (error) {
+        console.log("error - ", error);
+        setSpinner(false);
+        setToast((prevState) => ({
+          ...prevState,
+          toastOpen: true,
+          toastMsg: "Failed to download excel file",
+          toastType: "error",
+        }));
+      } 
+    }
+  }
+
   formsList?.forEach((e) => {
     //console.log("e =>", e);
     let applicationType = e?.course?.application_type?.replace("_", " ");
@@ -434,6 +495,15 @@ const DesktopAnalysisList = () => {
                 </div>
               </div>
             </div>
+            <div className="sm:col-span-3 flex justify-end">
+              <Button
+                onClick={() => {
+                  downloadReport();
+                }}
+                moreClass="border boevent_namerder-blue-500 bg-white text-blue-500 "
+                text="Download DA Completed forms as excel file"
+              ></Button>
+              </div>
           </div>
 
           <div className="flex flex-col gap-4">

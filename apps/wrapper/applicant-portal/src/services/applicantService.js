@@ -2,6 +2,9 @@ import { APIS } from "../constants";
 import axiosService from "./axiosService";
 import paymentService from "./paymentService";
 
+
+let paymentReferenceNo="";
+
 const NOTIFICATION_BASE_URL =
   process.env.REACT_APP_NODE_URL || "https://uphrh.in/api/api/";
 
@@ -39,6 +42,11 @@ const getApplicantDetails = (applicantDetails) => {
 // payment service
 const initiatePayment = async (postData) => {
   const res = await paymentService.post(APIS.PAYMENT.GENERATE_LINK, postData);
+  return res;
+};
+
+const initiatePaymentForNewForm = async (postData) => {
+  const res = await paymentService.post(APIS.PAYMENT.GENERATE_LINK_V2, postData);
   return res;
 };
 
@@ -89,6 +97,7 @@ export const getAllRegulatorDeviceId = async (postData) => {
 };
 
 const transactionStatus = async (postData) => {
+  console.log(postData)
   const res = await axiosService.post(APIS.APPLICANT.ADD_TRANSACTION, postData);
   return res;
 };
@@ -99,12 +108,25 @@ const updatePaymentStatus = async (postData) => {
   );
   return res;
 };
+
+const savePaymentRefNumber = async (referenceNo) => {
+  paymentReferenceNo = referenceNo;
+  console.log(paymentReferenceNo)
+  return paymentReferenceNo;
+};
+
+const getPaymentRefNumber = async () => {
+ // setPaymentReferenceNo(referenceNo)
+  return paymentReferenceNo;
+};
+
 export const applicantService = {
   addInstitute,
   updateParentCode,
   addInstitutePoc,
   getApplicantDetails,
   initiatePayment,
+  initiatePaymentForNewForm,
   updateApplicantDeviceId,
   sendPushNotification,
   getAllRegulatorDeviceId,
@@ -113,5 +135,7 @@ export const applicantService = {
   getAllNotifications,
   sendEmailNotification,
   readNotification,
-  checkIsEmailExist
+  checkIsEmailExist,
+  savePaymentRefNumber,
+  getPaymentRefNumber
 };

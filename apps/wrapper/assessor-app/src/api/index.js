@@ -470,7 +470,12 @@ export const isUserActive = async (email) => {
         },
       }
     );
-    return res.data[0].enabled;
+    if(res.data[0]){
+      return res.data[0].enabled;
+    } else {
+      return false;
+    }
+   
   } catch (err) {
     console.log(err);
     return err;

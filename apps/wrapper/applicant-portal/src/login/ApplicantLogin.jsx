@@ -38,6 +38,37 @@ const ApplicantLogin = () => {
     checkLoggedInStatus();
   }, [navigate]);
 
+
+  const isUserActive = async (data) => {
+    //setSpinner(true);
+    try {
+      const res = await userService.isUserActive(data);
+      if (res?.data[0]?.enabled) {
+        login(data);
+        //setSpinner(false);
+      } else {
+        //setSpinner(false);
+        setToast((prevState) => ({
+          ...prevState,
+          toastOpen: true,
+          toastMsg: "User not found. Please contact system admin.",
+          toastType: "error",
+        }));
+        return
+      }
+      
+    } catch (error) {
+     // setSpinner(false);
+      setToast((prevState) => ({
+        ...prevState,
+        toastOpen: true,
+        toastMsg: "Something went wrong. Please try again later. ",
+        toastType: "error",
+      }));
+    }
+   
+  }
+
   const login = async (data) => {
     try {
       const otpRes = await userService.generateOtp({
@@ -51,17 +82,18 @@ const ApplicantLogin = () => {
         setToast((prevState) => ({
           ...prevState,
           toastOpen: true,
-          toastMsg: otpRes?.data?.error ? otpRes?.data?.error : "Something went wrong",
+          toastMsg: otpRes?.data?.error ? otpRes?.data?.error : "Something went wrong.Please try again later",
           toastType: "error",
         }));
-        console.log("Something went wrong", otpRes);
+     //   console.log("Something went wrong", otpRes);
+    
       }
     } catch (error) {
       console.log("Otp not sent due to some error", error);
       setToast((prevState) => ({
         ...prevState,
         toastOpen: true,
-        toastMsg: "User not registered.",
+        toastMsg: "Something went wrong.Please try again later",
         toastType: "error",
       }));
     }
@@ -129,7 +161,8 @@ const ApplicantLogin = () => {
               <>
                 <form
                   onSubmit={handleSubmit((data) => {
-                    login(data);
+                    //login(data);
+                    isUserActive(data)
                   })}
                   noValidate
                 >
@@ -214,11 +247,11 @@ const ApplicantLogin = () => {
                         Please enter the correct OTP
                       </p>
                     )}
-                    {toast.toastOpen && (
+                  {/*   {toast.toastOpen && (
                       <p className="text-red-500 mt-2 text-sm">
                         You are not a registered institute.
                       </p>
-                    )}
+                    )} */}
                   </div>
                   <Button
                     moreClass="uppercase text-white w-full mt-7"

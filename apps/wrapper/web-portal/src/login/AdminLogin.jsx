@@ -73,17 +73,32 @@ const AdminLogin = () => {
   };
 
   const isUserActive = async (data) => {
-    const res = await userService.isUserActive(data);
-    if (res.data[0].enabled) {
-      login(data);
-    } else {
+    setSpinner(true);
+    try {
+      const res = await userService.isUserActive(data);
+      if (res?.data[0]?.enabled) {
+        login(data);
+        setSpinner(false);
+      } else {
+        setSpinner(false);
+        setToast((prevState) => ({
+          ...prevState,
+          toastOpen: true,
+          toastMsg: "User not found. Please contact system admin.",
+          toastType: "error",
+        }));
+      }
+      
+    } catch (error) {
+      setSpinner(false);
       setToast((prevState) => ({
         ...prevState,
         toastOpen: true,
-        toastMsg: "User not found. Please contact system admin.",
+        toastMsg: "Something went wrong. Please try again later. ",
         toastType: "error",
       }));
     }
+   
   }
 
   const verifyOtp = async (data) => {

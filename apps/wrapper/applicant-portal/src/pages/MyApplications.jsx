@@ -7,7 +7,6 @@ import { applicationService, formService } from "../services";
 import { getCookie } from "../utils";
 import { setToLocalForage } from "../forms";
 import { Switch, Tooltip } from "@material-tailwind/react";
-import { profileService } from "../services";
 import { ContextAPI } from "../utils/contextAPI";
 
 

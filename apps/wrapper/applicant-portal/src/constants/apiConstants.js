@@ -21,6 +21,10 @@ export const APIS = {
     EDIT_USER: "update",
   },
 
+  USER:{
+    CHECKVALID: "emaildetails"
+  },
+  
   LOGIN: {
     GENERATE_OTP: "keycloak/otp",
     USERLOGIN: "keycloak/login",
@@ -56,6 +60,7 @@ export const APIS = {
     readNotification: `notification/update`,
   },
   PAYMENT:{
+    GENERATE_LINK_V2: `payment/v2/generatelink`,
     GENERATE_LINK: `payment/generatelink`,
     UPDATE_PAYMENT_STATUS: `rest/updatePaymentStatus`
   },

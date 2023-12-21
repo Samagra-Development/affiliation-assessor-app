@@ -5,7 +5,7 @@ import ROUTE_MAP from "../routing/routeMap";
 import CommonLayout from "../components/CommonLayout";
 import Button from "../components/Button";
 
-import { login } from "../api";
+import { login, isUserActive } from "../api";
 import { setCookie } from "../utils";
 
 const LoginMedical = ({ handleStepChangeForLogin }) => {
@@ -31,55 +31,56 @@ const LoginMedical = ({ handleStepChangeForLogin }) => {
       return;
     }
 
-    const loginRes = await login(username, password);
-   // console.log("login-", loginRes.accessToken);
-    const role = loginRes?.userRepresentation?.attributes?.Role?.[0];
-    //console.log(role);
-    if (loginRes?.accessToken) {
-      setCookie("userData", loginRes);
-      navigate(ROUTE_MAP.root_star);
-    }
-    if (loginRes?.errors?.length > 0) {
-      if (loginRes?.errors?.[0] === "Credentials have authorization issue") {
-        setError("Invalid Username/ Password");
-      } else {
-        setError(loginRes?.errors?.[0]);
+    try {
+      const userIsValidRes = await isUserActive(username)
+      if (!userIsValidRes) {
+        setError("User not found. Please contact system administrator.");
+        setTimeout(() => {
+          setError("");
+        }, 3000);
+        return
       }
+
+      const loginRes = await login(username, password);
+      if (loginRes?.accessToken) {
+        setCookie("userData", loginRes);
+        navigate(ROUTE_MAP.root_star);
+      }
+      if (loginRes?.errors?.length > 0) {
+        if (loginRes?.errors?.[0] === "Credentials have authorization issue") {
+          setError("Invalid Username/ Password");
+        } else {
+          setError(loginRes?.errors?.[0]);
+        }
+        setTimeout(() => {
+          setError("");
+        }, 3000);
+        return;
+      }
+
+      if (loginRes?.error) {
+        // console.log(loginRes?.error)
+        loginRes?.error === "Unable to get user details" ? setError("User not found. Please contact administrator") :
+          setError("Invalid Username/ Password");
+        setTimeout(() => {
+          setError("");
+        }, 3000);
+        return
+      }
+
+      setError("An internal server error occurred");
       setTimeout(() => {
         setError("");
       }, 3000);
-      return;
-    }
 
-    if(loginRes?.error) {
-     // console.log(loginRes?.error)
-      loginRes?.error === "Unable to get user details" ?   setError("User not found. Please contact administrator") :
-      setError("Invalid Username/ Password");
+    } catch (error) {
+      setError("Something went wrong");
       setTimeout(() => {
         setError("");
       }, 3000);
-      return
     }
 
-    // if (role == "Assessor") {
-    //   setCookie("userData", loginRes?.userRepresentation);
-    //   navigate(ROUTE_MAP.root);
-    // }
-    // if (loginRes.responseCode == "OK" && loginRes.result) {
-    //   let loggedInUser = loginRes.result.data.user;
-    //   setCookie("userData", loggedInUser);
-    //   if (userIsAdminForPortal(loggedInUser.user.registrations)) {
-    //     navigate(ROUTE_MAP.admin);
-    //   } else {
-    //     navigate(ROUTE_MAP.root);
-    //   }
-    //   return;
-    // }
 
-    setError("An internal server error occurred");
-    setTimeout(() => {
-      setError("");
-    }, 3000);
   };
 
   return (

@@ -122,9 +122,27 @@ const getAccessToken = (postData) => {
   return accessTokenAxiosService.post(APIS.ACCESS_TOKEN.TOKEN_URL, postData);
 };
 
+const isUserActive = (postData) => {
+  return keyCloakAxiosService.post(APIS.USER.CHECKVALID,
+     {
+      request:{
+        fieldName: "email",
+        fieldValue: postData.email
+      }
+  },
+     {
+    headers: {
+      "Content-Type": "application/json",
+      // "Authorization": getCookie("access_token")
+      Authorization: process.env.REACT_APP_AUTH_TOKEN,
+    },
+  });
+
+};
 export const userService = {
   generateOtp,
   login,
   signup,
   getAccessToken,
+  isUserActive
 };

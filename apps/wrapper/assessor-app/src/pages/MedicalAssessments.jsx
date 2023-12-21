@@ -130,7 +130,7 @@ const MedicalAssessments = () => {
       pageTitle="Today's Inspection"
     >
       <div
-        className={`flex flex-col px-6 min-h-[calc(100vh-214px)] overflow-y-scroll pb-6 ${
+        className={`flex flex-col px-6 h-3/4 overflow-y-scroll pb-6 ${
           !data?.id ? "justify-center" : ""
         }`}
       >

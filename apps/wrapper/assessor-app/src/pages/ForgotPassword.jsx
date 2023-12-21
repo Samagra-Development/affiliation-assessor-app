@@ -6,7 +6,6 @@ import CommonLayout from "../components/CommonLayout";
 import Button from "../components/Button";
 import OtpInput from "react-otp-input";
 
-import { sendOtpToMobile, verifyOtpSavePassword } from "../api";
 import { logout } from "./../utils/index";
 import { generateOTP, getLoginDetails, editUserKeycloak, isUserActive } from "../api";
 
@@ -120,6 +119,11 @@ const ForgotPassword = () => {
     setDetails(loginRes.data);
     // const res = await verifyOtpSavePassword(mobile, newPass, otp);
     if (loginRes.status === 200) {
+      if(loginRes.data.error === "OTP mismatch"){
+        setError("Wrong OTP entered");
+        setTimeout(() => setError(false), 3000);
+        return;
+      }
       setChangePasswordPage(true);
       setOtpPage(false);
     } else if (loginRes?.params?.err == "INVALID_OTP_USERNAME_PAIR") {
@@ -172,7 +176,7 @@ const ForgotPassword = () => {
     >
       {/* Entering email id for password change */}
       {!otpPage && !changePasswordPage && !passChanged && (
-        <div className="flex flex-col px-3 py-8 h-100 justify-between h-[90%]">
+        <div className="flex flex-col px-3 py-8 h-5/6 justify-between h-[90%]">
           <div className="w-full">
             <p className="text-secondary text-2xl font-bold">
               Enter a valid email id
@@ -189,21 +193,24 @@ const ForgotPassword = () => {
                 {error.length ? error : "Please enter a valid email id"}
               </p>
             )}
-          </div>
-          <Button text="Next" onClick={handleVerifyEmail} />
-        </div>
+           </div>
+            
+          <button className="w-full p-2 flex justify-center border" 
+           onClick={handleVerifyEmail} >Next</button>
+         </div>
       )}
 
       {/* Entering OTP to change the password  */}
       {otpPage && !passChanged && (
-        <div className="flex flex-col px-3 py-8 h-100 justify-between h-[90%]">
+        <div className="flex flex-col px-3 py-8 h-5/6 justify-between h-[90%]">
           <div className="w-full">
             <p className="text-secondary text-xl lg:text-2xl font-bold">
-              Enter OTP sent on
+              Enter OTP sent on  :
+              <span className="text-primary text-xl lg:text-3xl  py-4">
+              &nbsp;{mobile}
+            </span>
             </p>
-            <p className="text-primary text-2xl lg:text-3xl font-bold py-4">
-              {email}
-            </p>
+            
             <style>
               {`
                 .error-otp {
@@ -261,7 +268,7 @@ const ForgotPassword = () => {
 
       {/* Change password page  */}
       {!otpPage && changePasswordPage && !passChanged && (
-        <div className="flex flex-col px-3 py-8 h-100 justify-between h-[90%]">
+        <div className="flex flex-col px-3 py-8 h-5/6 justify-between h-[90%]">
           <div className="w-full">
             <p className="text-secondary text-xl font-bold">
               Change Password Here

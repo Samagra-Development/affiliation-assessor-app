@@ -1,0 +1,28 @@
+ {
+    "endpoint": "https://eazypayuat.icicibank.com/EazyPG",
+    "returnUrl": "https://payment.uphrh.in/api/v1/user/payment",
+    "paymode": "9",
+    "secret": "",
+    "merchantId": "600547",
+    "mandatoryFields": {
+      "referenceNo": "",
+      "submerchantId": "45",
+      "transactionAmount": "2500",
+      "invoiceId": "x1",
+      "invoiceDate": "x",
+      "invoiceTime": "x",
+      "merchantId": "x",
+      "payerType": "affiliation",
+      "payerId": "",
+      "transactionId": "x",
+      "transactionDate": "x",
+      "transactionTime": "x",
+      "transactionStatus": "x",
+      "refundId": "x",
+      "refundDate": "x",
+      "refundTime": "x",
+      "refundStatus": "x"
+    },
+    "optionalFields": ""
+  }
+

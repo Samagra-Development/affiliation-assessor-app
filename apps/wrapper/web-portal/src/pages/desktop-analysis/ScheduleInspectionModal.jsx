@@ -213,7 +213,8 @@ function ScheduleInspectionModal({ closeSchedule, otherInfo }) {
 
       updateFormStatus({
         form_id: otherInfo?.formId * 1,
-        form_status: "Inspection Scheduled",
+        updated_at: getLocalTimeInISOFormat(),
+        form_status: "Inspection Scheduled"
       });
 
       const applicantRes = await getApplicantDeviceId({

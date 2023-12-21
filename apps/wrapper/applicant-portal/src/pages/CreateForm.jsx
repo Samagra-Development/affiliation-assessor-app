@@ -10,6 +10,8 @@ import {
   FaRegTimesCircle,
 } from "react-icons/fa";
 
+import paymentConfigPostData from '../payment-config/config.json';
+
 import {
   getCookie,
   getFromLocalForage,
@@ -44,7 +46,7 @@ let isFormInPreview = false;
 
 const CreateForm = (props) => {
   const navigate = useNavigate();
-  let { formName, formId, applicantStatus } = useParams();
+  let { formName, formId, applicantStatus, paymentStage } = useParams();
   let [encodedFormURI, setEncodedFormURI] = useState("");
   let [paymentDetails, setPaymentDetails] = useState("");
   let [onFormSuccessData, setOnFormSuccessData] = useState(undefined);
@@ -74,7 +76,6 @@ const CreateForm = (props) => {
   const instituteDetails = getCookie("institutes");
   const [openStatusModel, setOpenStatusModel] = useState(false);
 
-  let formData = {};
 
   const formSpec = {
     skipOnSuccessMessage: true,
@@ -136,6 +137,21 @@ const CreateForm = (props) => {
     setEncodedFormURI(formURI);
   };
 
+  
+  const initiatePaymentForNewForm = async() => {
+
+    try {
+      paymentConfigPostData.refNo = generate_uuidv4();
+      paymentConfigPostData.payerId = instituteDetails?.[0]?.id;
+      const paymentRes = await applicantService.initiatePaymentForNewForm(paymentConfigPostData);
+      await applicantService.savePaymentRefNumber(paymentRes?.data?.referenceNo);
+      window.open(paymentRes?.data?.redirectUrl)
+     // window.location.replace(paymentRes?.data?.redirectUrl)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   const afterFormSubmit = async (e) => {
     const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
 
@@ -148,7 +164,9 @@ const CreateForm = (props) => {
           await fetchFormData();
           handleRenderPreview();
         } else {
+          console.log("aaaaaa")
           handleSubmit();
+      
         }
       }
 
@@ -199,6 +217,8 @@ const CreateForm = (props) => {
   };
 
   const handleSubmit = async () => {
+
+   
     const updatedFormData = await updateFormData(formSpec.start, userId);
     const course_details = await getSpecificDataFromForage("course_details");
 
@@ -213,28 +233,50 @@ const CreateForm = (props) => {
       course_id: course_details?.course_id,
     };
 
-    console.log("common_payload - ", common_payload);
-    if (!applicantStatus) {
+    await setToLocalForage(
+      `common_payload`,
+      {
+        "formSpecstart":formSpec.start, 
+        userId,
+        common_payload,
+        "paymentStage":"firstStage",
+        formId
+      }
+    );
+    
+   
+    initiatePaymentForNewForm();
+ 
+  };
+
+  const triggerFormSubmission = async () => {
+    const formDATA = await getFromLocalForage(
+      `common_payload`
+    );
+    const commonPayload = formDATA?.common_payload
+    if (applicantStatus === "undefined") { //new form
+      console.log("Saving new form..")
       await saveFormSubmission({
         schedule_id: null,
         assessor_id: null,
         applicant_id: instituteDetails?.[0]?.id,
         submitted_on: new Date().toJSON().slice(0, 10),
         form_status: "Application Submitted",
-        ...common_payload,
+        ...commonPayload,
       });
     } else {
+      console.log("Updating existing form..",formId)
       await updateFormSubmission({
         form_id: formId,
         applicant_id: instituteDetails?.[0]?.id,
         updated_at: getLocalTimeInISOFormat(),
         form_status: "Resubmitted",
-        ...common_payload,
+        ...commonPayload,
       });
-    }
+    } 
 
     // Delete the form and course details data from the Local Forage
-    removeAllFromLocalForage();
+     removeAllFromLocalForage();
     isFormInPreview = false;
 
     setOnSubmit(false);
@@ -243,13 +285,13 @@ const CreateForm = (props) => {
       toastOpen: true,
       toastMsg: "Form Submitted Successfully!.",
       toastType: "success",
-    }));
+    }))
 
     setTimeout(
       () => navigate(`${APPLICANT_ROUTE_MAP.dashboardModule.my_applications}`),
       1500
-    );
-  };
+    ); 
+  }
 
   const handleDownloadNocOrCertificate = () => {
     if (formDataNoc.round == 1) {
@@ -423,6 +465,14 @@ const CreateForm = (props) => {
     checkIframeLoaded();
     }
   }, [formLoaded]);
+
+  useEffect(() => {
+  console.log(paymentStage)
+  if(paymentStage === "firstStage") {
+    console.log("hhhhhhhhhhhhh")
+    triggerFormSubmission()
+    }
+  }, [paymentStage]);
 
   return (
     <div>

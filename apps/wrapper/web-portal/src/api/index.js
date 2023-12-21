@@ -681,14 +681,26 @@ export const getCoursesByTypeAndLevel = async (postData) => {
 export const exportToExcel = async (downloadObjects) => {
   if (downloadObjects && downloadObjects.objectsList) {
     const workbook = utils.book_new();
+    let wscols = [
+      {wch:10},
+      {wch:20},
+      {wch:20},
+      {wch:20},
+      {wch:25},
+      {wch:20},
+      {wch:10}
+  ];
+  
     downloadObjects.objectsList.forEach((element) => {
       const sheetName = element.sheetName ? element.sheetName : `Sheet ${workbook.SheetNames.length + 1}`
       const worksheet = utils.json_to_sheet([]);
+      worksheet['!cols'] = wscols;
       utils.sheet_add_aoa(worksheet, [element.headers])
       utils.book_append_sheet(workbook, worksheet, sheetName);
-      utils.sheet_add_json(worksheet, element.downloadObject, { origin: 'A2', skipHeader: true });
+      utils.sheet_add_json(worksheet, element.downloadObject, { origin: 'A4', skipHeader: true });
     });
     writeFile(workbook, downloadObjects.fileName ? downloadObjects.fileName : 'data.xlsx');
+    //writeFile(workbook, 'NoteExport.xls', { bookType: 'xlsx', type: 'buffer' });
   }
 }
 

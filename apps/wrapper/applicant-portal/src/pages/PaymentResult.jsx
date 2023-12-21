@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useContext } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "../components";
@@ -11,6 +11,10 @@ import APPLICANT_ROUTE_MAP from "../routes/ApplicantRoute";
 import { getCookie, removeCookie } from "../utils";
 import Header from "../components/Header";
 import { applicantService } from "../services";
+import {
+  getFromLocalForage
+} from "./../forms";
+
 
 export default function PaymentResult() {
   let [params, setParams] = useSearchParams();
@@ -23,9 +27,13 @@ export default function PaymentResult() {
 
   const applicantTransaction = async () => {
     if (params.get("transaction_id")) {
+      const paymentRefNo = await applicantService.getPaymentRefNumber();
       const formData = {
         transaction_details: [
-          { id: params.get("transaction_id"), form_id: formId },
+          { id: params.get("transaction_id"),
+           form_id: formId,
+           payment_ref_no: paymentRefNo
+           }
         ],
       };
       const formsResponse = await applicantService.transactionStatus(formData);
@@ -65,10 +73,27 @@ export default function PaymentResult() {
     removeCookie("payment_ref_no");
   };
 
-  useEffect(() => {
-    if (params.get("resp")) {
+  const getDataFromLocalForage = async () =>{
+    const formDATA = await getFromLocalForage(
+      `common_payload`
+    );
+    if (params.get("resp") && formDATA.paymentStage === "firstStage") {
+      navigate(
+        `${APPLICANT_ROUTE_MAP.dashboardModule.createForm}/${formDATA?.common_payload.form_name
+        }/${undefined}/${undefined}/${formDATA?.paymentStage}`
+      );
+     
+    } else if (params.get("resp"))  {
       applicantTransaction();
     }
+  }
+
+  useEffect(() => {
+
+    getDataFromLocalForage();
+    
+   
+    
   }, []);
 
   return (
