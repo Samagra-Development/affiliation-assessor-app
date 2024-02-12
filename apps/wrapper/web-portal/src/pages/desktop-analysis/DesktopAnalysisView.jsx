@@ -537,9 +537,7 @@ export default function DesktopAnalysisView() {
             let element = document.createElement("i");
             element.setAttribute("class","fa fa-comment");
             element.setAttribute('id', 'comment-section');
-            element.addEventListener('click', addAlert);
             labelElements[i].insertBefore(element, labelElements[i].childNodes[2]);
-
         }
       }
       if (
@@ -590,7 +588,8 @@ export default function DesktopAnalysisView() {
         optionElements[k].style.color = '#333333';
       } 
     }
-    
+    const commentElement = iframeContent.getElementById('comment-section');
+    commentElement?.addEventListener('click', addAlert);
     setSpinner(false);
   };
 
