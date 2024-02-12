@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Button } from "../components";
 import { FaEye } from "react-icons/fa";
 import { FiSend } from "react-icons/fi";
 import {
@@ -15,7 +14,7 @@ import { readableDate, formatDate, getInitials } from "../utils";
 import { Tooltip } from "@material-tailwind/react";
 
 
-function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLabel, alertMsg, actionProps }) {
+function CommentsModal({ showCommentsModal, actionFunction, quesContent, actionButtonLabel, alertMsg, actionProps }) {
     const { setSpinner, setToast, toast } = useContext(ContextAPI);
     const [showCommentsSection, setShowCommentsSection] = useState(false);
     const hiddenFileInput = React.useRef(null);
@@ -74,7 +73,7 @@ let quesNumber = "3"
                 commentData: {
                     comment: userComments,
                     file: [
-                        
+
                     ],
                     commentSource: {
                         userId: "NA",
@@ -185,6 +184,7 @@ let quesNumber = "3"
                 setIsFirstComment(true)
             } else 
             {
+                setIsFirstComment(false);
                 setCommentTreeId(res?.data?.commentTree?.commentTreeId)
                 commentsByRole = res?.data?.comments?.reduce((acc, el) => {
                     const key = el?.commentData?.commentSource?.userRole;
@@ -193,9 +193,9 @@ let quesNumber = "3"
                     // console.log(acc)
                     return acc;
                 }, {});
+
     
                 allRoles = Object.keys(commentsByRole)
-    
                 const allCommentsArr = []
                 const lastEntry = {}
                 for (let i in allRoles) {
@@ -204,6 +204,7 @@ let quesNumber = "3"
                         lastEntry.roleName = allRoles[i].trim();
                         lastEntry.comments = commentsByRole[allRoles[i].trim()];
                     } else {
+                       
                         commentsByRoleName.roleName = allRoles[i].trim()
                         commentsByRoleName.comments = commentsByRole[allRoles[i].trim()]
                         allCommentsArr.push(commentsByRoleName)
@@ -218,7 +219,7 @@ let quesNumber = "3"
             setAllRolesLoaded(true)
 
             // Accessing value dynamically
-            setLoggedInRoleComments(commentsByRole[loggedInRole])
+            setLoggedInRoleComments(commentsByRole)
 
         } catch (error) {
             console.log("getAllComments failed ...", error)
@@ -239,6 +240,7 @@ let quesNumber = "3"
     useEffect(() => {
         setLoggedInRole(getCookie("userData")?.attributes.Role[0])
       // setLoggedInRole("Desktop-Assessor")
+     //  setLoggedInRole("POU")
         //getAllComments();
         //console.log(allRoles)
     }, []);
@@ -507,7 +509,7 @@ let quesNumber = "3"
                         </div> */}
 
                         <div className='mt-2 footer flex flex-row justify-between mb-2'>
-                            <button onClick={() => { showAlert(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
+                            <button onClick={() => { showCommentsModal(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
                             <button onClick={() => actionFunction(actionProps)} className={`border  w-[140px] h-[40px] font-medium rounded-[4px] ${actionButtonLabel === "Delete" ? "border-red-800 text-white bg-red-800" : "border-blue-500 text-white bg-blue-500"}`}>{actionButtonLabel}</button>
                         </div>
                     </div>
@@ -643,7 +645,7 @@ let quesNumber = "3"
                         }
                         <hr />
                         <div className='footer flex flex-row justify-between'>
-                            <button onClick={() => { showAlert(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
+                            <button onClick={() => { showCommentsModal(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
                             <button onClick={() => actionFunction(actionProps)} className={`border  w-[140px] h-[40px] font-medium rounded-[4px] ${actionButtonLabel === "Delete" ? "border-red-800 text-white bg-red-800" : "border-blue-500 text-white bg-blue-500"}`}>{actionButtonLabel}</button>
                         </div>
                     </div>

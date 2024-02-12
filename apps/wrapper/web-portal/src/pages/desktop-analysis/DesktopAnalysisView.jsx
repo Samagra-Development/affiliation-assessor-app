@@ -73,7 +73,7 @@ export default function DesktopAnalysisView() {
   let [isDownloading, setIsDownloading] = useState(false);
   
   
-  const [showAlert, setShowAlert] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [state, setState] = useState({
     alertContent: {
       alertTitle: "",
@@ -360,7 +360,7 @@ export default function DesktopAnalysisView() {
 
   const handleEventTrigger = async (e) => {
    // console.log(e)
-   // setShowAlert(true);
+   // setShowCommentsModal(true);
     setState((prevState) => ({
       ...prevState,
       alertContent: {
@@ -636,8 +636,8 @@ export default function DesktopAnalysisView() {
   return (
     <StrictMode>
        
-        {showAlert && (
-          <CommentsModal showAlert={setShowAlert} {...state.alertContent} />
+        {showCommentsModal && (
+          <CommentsModal showCommentsModal={setShowCommentsModal} {...state.alertContent} />
         )}
       <div className="h-[48px] bg-white flex justify-start drop-shadow-sm">
         <div className="container mx-auto flex px-3">
