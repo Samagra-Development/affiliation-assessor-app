@@ -501,6 +501,8 @@ export default function DesktopAnalysisView() {
    if(closestParent !== null) {
     let spanElement = closestParent?.children[0];
     if(spanElement!== undefined) {
+      let value = spanElement.innerText;
+      console.log("value =>", value);
       let childrenElem = closestParent?.children;
       object['question'] = spanElement.innerText;
       if(childrenElem?.length > 0) {
