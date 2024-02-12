@@ -323,15 +323,19 @@ export default function DesktopAnalysisView() {
  
 
   const handleFormEvents = async (startingForm, afterFormSubmit, e) => {
-    if(typeof e.data === 'string' && e.data.includes('formLoad')) {
+    if(typeof e?.data === 'string' && e?.data.includes('comment-click')) {
+      console.log("Hiee");
+      return;
+    } 
+    if(typeof e?.data === 'string' && e?.data.includes('formLoad')) {
       setFormLoaded(true);
       return;
     }
-    if (typeof e.data === "string" && e.data.includes("webpackHot")) {
+    if (typeof e?.data === "string" && e?.data.includes("webpackHot")) {
       return;
     }
 
-    if (
+    if (e.data &&
       ENKETO_URL === e.origin + "/enketo" &&
       typeof e?.data === "string" &&
       JSON.parse(e?.data)?.state !== "ON_FORM_SUCCESS_COMPLETED" &&
@@ -494,7 +498,36 @@ export default function DesktopAnalysisView() {
   };
 
   const addAlert = (e) => {
-  
+   const element = e.target;
+   let object = {};
+   let answers = [];
+   let closestParent = element?.closest('.question');
+   if(closestParent !== null) {
+    let spanElement = closestParent?.children[0];
+    if(spanElement!== undefined) {
+      let value = spanElement.innerText;
+      console.log("value =>", value);
+      let childrenElem = closestParent?.children;
+      object['question'] = spanElement.innerText;
+      if(childrenElem?.length > 0) {
+      for(let i = 0; i < childrenElem?.length; i++) {
+        if(childrenElem[i]?.name !== undefined) {
+          if(childrenElem[i]?.name?.toLowerCase().includes('/data/d/')) {
+            answers.push(childrenElem[i]?.value);
+          }
+        }
+      }
+    }
+    console.log("answers =>", answers);
+    // let value = spanElement.innerText;
+    object['answer'] = answers[0];
+    let record = {
+            instance: 'comment-click',
+            object: object,
+    }
+    window.parent.postMessage(JSON.stringify({record}), '*');
+    }
+   }
   }
 
 
@@ -512,6 +545,7 @@ export default function DesktopAnalysisView() {
             let element = document.createElement("i");
             element.setAttribute("class","fa fa-comment");
             element.setAttribute('id', 'comment-section');
+            element.addEventListener('click', addAlert);
             labelElements[i].insertBefore(element, labelElements[i].childNodes[2]);
         }
       }
