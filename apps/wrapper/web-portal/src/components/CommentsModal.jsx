@@ -1,56 +1,152 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from "../components";
+import React, { useEffect, useState, useContext } from 'react';
 import { FaEye } from "react-icons/fa";
+import { FiSend } from "react-icons/fi";
 import {
     fetchAllComments,
+    updateUserComments,
+    addFirstUserComment
 } from "../api";
+import { ContextAPI } from "../utils/ContextAPI";
+
 
 import { getCookie } from "../utils/common";
 import { readableDate, formatDate, getInitials } from "../utils";
 import { Tooltip } from "@material-tailwind/react";
 
 
-function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLabel, alertMsg, actionProps }) {
-
+function CommentsModal({ showCommentsModal, actionFunction, quesContent, actionButtonLabel, alertMsg, actionProps }) {
+    const { setSpinner, setToast, toast } = useContext(ContextAPI);
     const [showCommentsSection, setShowCommentsSection] = useState(false);
     const hiddenFileInput = React.useRef(null);
     const [fileTypeError, setFileTypeError] = useState(false);
     const [fileName, setFileName] = useState("");
     const [file, setFile] = useState({});
 
-    const [daComments, setDaComments] = useState('');
-    const [adminComments, setAdminComments] = useState('');
+    const [userComments, setUserComments] = useState('');
     const [ogaComments, setOgaComments] = useState('');
-
+    const [loggedInRoleComments, setLoggedInRoleComments] = useState('');
+    const [allRolesLoaded, setAllRolesLoaded] = useState(false);
+    const [allComments, setAllComments] = useState([]);
+    const [isFirstComment, setIsFirstComment] = useState(false);
+    
+    let commentsByRole = {}
     // isDATextAreaDisabled
-    const [isDATextAreaDisabled, setIsDATextAreaDisabled] = useState(true);
-    const [isAdminTextAreaDisabled, setIsAdminTextAreaDisabled] = useState(true);
-    const [isOGATextAreaDisabled, setIsOGATextAreaDisabled] = useState(true);
+let quesNumber = "3"
 
-
-    const [items, setItems] = useState([]);
+    const [commentTreeId, setCommentTreeId] = useState('');
     const [loggedInRole, setLoggedInRole] = useState('');
-
 
     const setApproveReject = (e) => {
         console.log("00000000000", e)
         e === "Approved" ? setShowCommentsSection(false) : setShowCommentsSection(true)
     };
 
-    const handleChangeDAComments = (e) => {
-        setDaComments(e.target.value)
+    const handleChangeComments = (e) => {
+        setUserComments(e.target.value)
     };
 
     const handleChangeAdminComments = (e) => {
-        setAdminComments(e.target.value)
+      //  setAdminComments(e.target.value)
     };
 
     const handleChangeOGAComments = (e) => {
-        setOgaComments(e.target.value)
+       // setOgaComments(e.target.value)
     };
 
     const handleButtonClick = (e) => {
         hiddenFileInput.current.click();
+    };
+
+    const postUserMessage= async (e) => {
+        if(userComments){
+
+            let reqBody = {}
+
+           if(isFirstComment){
+            reqBody = {
+                commentTreeData: {
+                    entityType: "AffiliationForm",
+                    entityId: quesNumber,//ques id
+                    workflow: "Affiliation"
+
+                },
+                commentData: {
+                    comment: userComments,
+                    file: [
+
+                    ],
+                    commentSource: {
+                        userId: "NA",
+                        userPic: "NA",
+                        userName: `${getCookie("userData")?.firstName?.trim()} ${getCookie("userData")?.lastName?.trim()}`,
+                        userRole:loggedInRole
+                    }
+                }
+            }
+
+           } else {
+            reqBody = {
+                commentTreeId: commentTreeId,
+                   commentData: {
+                    comment: userComments,
+                    file: [
+                       
+                    ],
+                    commentSource: {
+                        userId: "NA",
+                        userPic: "NA",
+                        userName: `${getCookie("userData")?.firstName?.trim()} ${getCookie("userData")?.lastName?.trim()}`,
+                        userRole: loggedInRole
+                    }
+                }
+            }
+           }
+
+            try {
+                let res; 
+                isFirstComment ? res = await addFirstUserComment(reqBody): res= await updateUserComments(reqBody); 
+
+                if(res?.status === 200){
+                     getAllComments();
+                     setUserComments('');
+                     setIsFirstComment(false);
+                }
+            } catch (error) {
+                console.log("updateUserComments failed ...", error)
+                setToast((prevState) => ({
+                    ...prevState,
+                    toastOpen: true,
+                    toastMsg: "Failed to post user comment.",
+                    toastType: "error",
+                }));
+            }
+            finally {
+                setSpinner(false);
+            }
+          
+           
+           /*  try {
+                setSpinner(true);
+             
+                const res = 
+                if(res?.status === 200){
+                     getAllComments();
+                     setUserComments('');
+                }
+            } catch (error) {
+                console.log("updateUserComments failed ...", error)
+                setToast((prevState) => ({
+                    ...prevState,
+                    toastOpen: true,
+                    toastMsg: "Failed to post user comment.",
+                    toastType: "error",
+                }));
+            }
+            finally {
+                setSpinner(false);
+            } */
+           
+        }
     };
 
     const handleChangeFileUpload = (e) => {
@@ -78,33 +174,88 @@ function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLab
 
 
     const getAllComments = async () => {
+        let allRoles = []
         try {
-            const res = await fetchAllComments();
-            console.log(res?.comments)
+            setSpinner(true);
+            const res = await fetchAllComments(quesNumber);
 
-            setItems(res?.comments)
-            /*    let commentsByRole = res?.comments.reduce((acc, el) => {
-                   const key = el?.commentData?.commentSource?.role;
-                   (acc[key] = acc[key] || []).push(el.commentData.comment);
-                   return acc;
-               }, {});
-   
-               setAdminComments(commentsByRole.Admin.join('\r\n'))
-               setOgaComments(commentsByRole["Assessor"].join('\r\n'))
-               setDaComments(commentsByRole["Desktop-Admin"].join('\r\n')) */
+            if (res?.data?.code === 'Not Found') {
+                // first comment
+                setIsFirstComment(true)
+            } else 
+            {
+                setIsFirstComment(false);
+                setCommentTreeId(res?.data?.commentTree?.commentTreeId)
+                commentsByRole = res?.data?.comments?.reduce((acc, el) => {
+                    const key = el?.commentData?.commentSource?.userRole;
+                    (acc[key] = acc[key] || []).push(el);
+                    // commentsByRole.push({key:acc[key]})
+                    // console.log(acc)
+                    return acc;
+                }, {});
+
+    
+                allRoles = Object.keys(commentsByRole)
+                const allCommentsArr = []
+                const lastEntry = {}
+                for (let i in allRoles) {
+                    let commentsByRoleName = { roleName: "", comments: [] }
+                    if(loggedInRole === allRoles[i].trim()){
+                        lastEntry.roleName = allRoles[i].trim();
+                        lastEntry.comments = commentsByRole[allRoles[i].trim()];
+                    } else {
+                       
+                        commentsByRoleName.roleName = allRoles[i].trim()
+                        commentsByRoleName.comments = commentsByRole[allRoles[i].trim()]
+                        allCommentsArr.push(commentsByRoleName)
+                    }
+               
+                }
+                allCommentsArr.push(lastEntry)
+                setAllComments(allCommentsArr)
+            }
+
+           
+            setAllRolesLoaded(true)
+
+            // Accessing value dynamically
+            setLoggedInRoleComments(commentsByRole)
+
         } catch (error) {
             console.log("getAllComments failed ...", error)
+            setToast((prevState) => ({
+                ...prevState,
+                toastOpen: true,
+                toastMsg: "Failed to load user comments.",
+                toastType: "error",
+            }));
+        }
+        finally {
+            setSpinner(false);
         }
 
         // getNocOrCertificatePdf(formData);
     };
 
     useEffect(() => {
-        getAllComments()
-        //const loggedInRole = getCookie("userData")?.attributes.Role[0];
         setLoggedInRole(getCookie("userData")?.attributes.Role[0])
+      // setLoggedInRole("Desktop-Assessor")
+     //  setLoggedInRole("POU")
+        //getAllComments();
+        //console.log(allRoles)
     }, []);
 
+    useEffect(() => {
+
+        if (loggedInRole) {
+            getAllComments();
+        }
+    }, [loggedInRole]);
+
+
+/*         useEffect(() => {
+            console.log(allComments)
+        }, [allRolesLoaded, allComments, loggedInRoleComments]); */
 
     return (
         <>
@@ -115,41 +266,55 @@ function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLab
 
                         <div className='min-w-[550px]'>
 
-                            {items.map((item, index) => (
+                            {allRolesLoaded && allComments?.map((elem,i) => (
 
-                                <p className='m-3 mb-2 p-2 border border-grey-500 text-black font-medium rounded-[4px]'>
+                                <div key={i}>
+                                         {/* console.log(elem) */}
+                                    {loggedInRoleComments && elem?.comments?.map((item, index) => (
 
-                                    <div className='flex flex-row gap-4 '>
-                                        <Tooltip arrow content={item.commentData.commentSource.role}>
-                                            <div className='flex h-[40px] w-[40px] rounded-full bg-pink-500 items-center m-2 justify-center'>
-                                                {getInitials(
-                                                    `${item.commentData.commentSource.role.trim()}`
-                                                )}
-                                            </div>
-                                        </Tooltip>
+                                        <div className='m-3 mb-2 p-2 border border-grey-500 text-black font-medium rounded-[4px]'key={index}>
 
-                                        <div className='flex flex-col'>
-                                            <div className='flex  m-1'>
-                                                <div>{item.commentData.commentSource.userName}</div>
-                                                <div className='ml-4 text-gray-700'>{readableDate(item.createdDate)}</div>
-                                            </div>
-                                            <div className='flex w-[430px] justify-between'>
-                                                <div className=''>
-                                                    <p >{item.commentData.comment}</p>
+                                            <div className='flex flex-row gap-4 '>
+                                                <Tooltip arrow content={item?.commentData?.commentSource?.userRole}>
+                                                    <div className='flex h-[40px] w-[40px] rounded-full bg-pink-500 items-center m-2 justify-center'>
+                                                        {getInitials(
+                                                            `${item.commentData.commentSource.userRole.trim()}`
+                                                        )}
+                                                    </div>
+                                                </Tooltip>
+
+                                                <div className='flex flex-col'>
+                                                    <div className='flex  m-1'>
+                                                        <div>{item.commentData.commentSource.userName}</div>
+                                                        <div className='ml-4 text-gray-700'>{readableDate(item.createdDate)}</div>
+                                                    </div>
+                                                    <div className='flex w-[430px] justify-between'>
+                                                        <div className=''>
+                                                            <p >{item.commentData.comment}</p>
+                                                        </div>
+                                                        <div >
+                                                            { item.commentData.file.length !=0 &&
+                                                                 (   <span className='flex flex-row gap-1 items-center cursor-pointer'><FaEye />{item.commentData.file}</span>
+                                                                 )
+                                                            }
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div >
-                                                    <span className='flex flex-row gap-1 items-center cursor-pointer'><FaEye />{item.commentData.file}</span>
-                                                </div>
+
                                             </div>
                                         </div>
 
-                                    </div>
-                                </p>
+                                    ))}
+                                </div>
+                            )
+                            )
+                            }
+                        </div>
 
-                            ))}
 
+                        <div className='min-w-[550px]'>
 
-                            {loggedInRole === "Assessor" &&
+                            {/*        {loggedInRole === "Assessor" &&
                                 <div>
                                     <input className='justify-center'
                                         type="file"
@@ -202,18 +367,28 @@ function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLab
 
                                     <div className="mt-2 flex ml-2">{fileName}</div>
                                 </div>
-                            }
+                            } */}
+                            <div className='flex  gap-4 min-w-[300px]'>
+                                <span>
+                                    <textarea
+                                        onChange={handleChangeComments}
+                                        placeholder="Write here..."
+                                        className="mt-2 ml-2 border w-[500px] h-[100px] p-2 rounded-xl resize-none"
+                                        value={userComments}
+                                        cols="30"
+                                        rows="4"
+                                    ></textarea>
+                                </span>
+                                <div className='flex items-center mt-2  '
+                                onClick={postUserMessage}
+                                > 
+                                  <FiSend className='cursor-pointer  text-blue-400'
+                                  size={28}
+                                 />
+                                </div>
+                            </div>
 
-                            <textarea
-                                onChange={handleChangeDAComments}
-                                placeholder="Write here..."
-                                className="mt-2 ml-2 border w-[530px] h-[100px] p-2 rounded-xl resize-none"
-                                value={daComments}
-                                cols="30"
-                                rows="4"
-                            ></textarea>
-
-                            {loggedInRole === "Desktop-Admin" &&
+                            {loggedInRole === "Desktop-Assessor" &&
                                 <div
                                     onChange={(e) => setApproveReject(e.target.value)}
                                     className="py-2 px-1 ml-2 mt-2"
@@ -229,17 +404,17 @@ function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLab
                                 </div>}
                         </div>
 
-                        <div className='min-w-[550px]'>
+                        {/*     <div className='min-w-[550px]'>
 
-                            {items.map((item, index) => (
+                            {items?.map((item, index) => (
 
                                 <p className='m-3 mb-2 p-2 border border-grey-500 text-white font-medium rounded-[4px]'>
 
                                     <div className='flex flex-row gap-4 '>
-                                        <Tooltip arrow content={item.commentData.commentSource.role}>
+                                        <Tooltip arrow content={item.commentData.commentSource.userRole}>
                                             <div className='flex h-[40px] w-[40px] rounded-full bg-pink-500 items-center m-2 justify-center'>
                                                 {getInitials(
-                                                    `${item.commentData.commentSource.role.trim()}`
+                                                    `${item.commentData.commentSource.userRole.trim()}`
                                                 )}
                                             </div>
                                         </Tooltip>
@@ -331,22 +506,15 @@ function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLab
                                 </div>
                             }
 
-                        </div>
+                        </div> */}
 
                         <div className='mt-2 footer flex flex-row justify-between mb-2'>
-                            <button onClick={() => { showAlert(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
+                            <button onClick={() => { showCommentsModal(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
                             <button onClick={() => actionFunction(actionProps)} className={`border  w-[140px] h-[40px] font-medium rounded-[4px] ${actionButtonLabel === "Delete" ? "border-red-800 text-white bg-red-800" : "border-blue-500 text-white bg-blue-500"}`}>{actionButtonLabel}</button>
                         </div>
                     </div>
                 </div>
             </div>
-
-
-
-
-
-
-
 
 
             {/* overflow:scroll reqd */}          {/*   <div className='flex justify-center items-center fixed inset-0 bg-opacity-25 z-10 backdrop-blur-sm '>
@@ -477,7 +645,7 @@ function CommentsModal({ showAlert, actionFunction, quesContent, actionButtonLab
                         }
                         <hr />
                         <div className='footer flex flex-row justify-between'>
-                            <button onClick={() => { showAlert(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
+                            <button onClick={() => { showCommentsModal(false) }} className="border border-blue-500 bg-white text-blue-500 w-[140px] h-[40px] font-medium rounded-[4px]">Cancel</button>
                             <button onClick={() => actionFunction(actionProps)} className={`border  w-[140px] h-[40px] font-medium rounded-[4px] ${actionButtonLabel === "Delete" ? "border-red-800 text-white bg-red-800" : "border-blue-500 text-white bg-blue-500"}`}>{actionButtonLabel}</button>
                         </div>
                     </div>

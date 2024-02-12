@@ -133,142 +133,24 @@ export const findFormsWithSameName = async (postData) => {
   );
 };
 
-export const fetchAllComments = async (postData) => {
-/*   const res = await adminCustomPost.post(
-    API_URL.manageForms.getForms,
+export const fetchAllComments = async (quesId) => {
+  return  await adminCustomPost.get(
+    `${API_URL.manageUserComments.getAll}?entityType=AffiliationForm&entityId=${quesId}&workflow=Affiliation`
+  );
+};
+
+export const updateUserComments = async (postData) => {
+  return  await adminCustomPost.post(
+    API_URL.manageUserComments.update,
     postData
-  ); */
-  const res = {
-    "commentTree": {
-        "commentTreeId": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbnRpdHlJZCI6InNjaGVtZTEiLCJlbnRpdHlUeXBlIjoic2NoZW1lIiwid29ya2Zsb3ciOiJhcHByb3ZhbCJ9.UOm0cKp_ip2aUQLw3ghbo2TYUKPhQn9jq4ESDumFe4M",
-        "commentTreeData": {
-            "comments": [
-                {
-                    "children": [
-                        {
-                            "children": [
-                                {
-                                    "children": [
-                                        {
-                                            "children": [
-                                                {
-                                                    "commentId": "2fbb3951-520f-11ee-99d1-818943f8dcc5"
-                                                }
-                                            ],
-                                            "commentId": "a57c0f00-520c-11ee-99d1-3bfe88a8da12"
-                                        }
-                                    ],
-                                    "commentId": "c14e81ae-5138-11ee-99d1-2fc242988c1f"
-                                },
-                                {
-                                    "commentId": "4b2de04f-515d-11ee-99d1-33ae7dd92a08"
-                                },
-                                {
-                                    "commentId": "0a254994-52e8-11ee-99d1-470c82849d58"
-                                }
-                            ],
-                            "commentId": "86a475cb-5073-11ee-99d1-9b5e78640948"
-                        },
-                        {
-                            "commentId": "acc61f1c-512c-11ee-99d1-d3199133ca7b"
-                        },
-                        {
-                            "commentId": "6be51e9d-5138-11ee-99d1-19fbc8a13401"
-                        },
-                        {
-                            "commentId": "62b34c92-52e5-11ee-99d1-63bfaeddbcb5"
-                        },
-                        {
-                            "commentId": "c4763cb3-52e7-11ee-99d1-5d367925f667"
-                        }
-                    ],
-                    "commentId": "cef4c929-506d-11ee-99d1-1b6e163ce3cf"
-                },
-                {
-                    "commentId": "dff72fba-506d-11ee-99d1-d39327540958"
-                }
-            ],
-            "entityId": "scheme1",
-            "workflow": "approval",
-            "childNodes": [
-                "cef4c929-506d-11ee-99d1-1b6e163ce3cf",
-                "dff72fba-506d-11ee-99d1-d39327540958",
-                "86a475cb-5073-11ee-99d1-9b5e78640948",
-                "acc61f1c-512c-11ee-99d1-d3199133ca7b",
-                "6be51e9d-5138-11ee-99d1-19fbc8a13401",
-                "c14e81ae-5138-11ee-99d1-2fc242988c1f",
-                "4b2de04f-515d-11ee-99d1-33ae7dd92a08",
-                "a57c0f00-520c-11ee-99d1-3bfe88a8da12",
-                "2fbb3951-520f-11ee-99d1-818943f8dcc5",
-                "62b34c92-52e5-11ee-99d1-63bfaeddbcb5",
-                "c4763cb3-52e7-11ee-99d1-5d367925f667",
-                "0a254994-52e8-11ee-99d1-470c82849d58"
-            ],
-            "entityType": "scheme",
-            "firstLevelNodes": [
-                "cef4c929-506d-11ee-99d1-1b6e163ce3cf",
-                "dff72fba-506d-11ee-99d1-d39327540958"
-            ]
-        },
-        "status": "active",
-        "createdDate": "2023-09-11T06:38:25.036+00:00",
-        "lastUpdatedDate": null
-    },
-    "comments": [
-      
-     
-        {
-            "commentId": "c14e81ae-5138-11ee-99d1-2fc242988c1f",
-            "commentData": {
-                "file": "file123",
-                "comment": "Please agree both of u...",
-                "commentSource": {
-                  "userId": "vid666",
-                  "userPic": "vidPic",
-                  "userName": "vidya Patel",
-                  "role":"Admin"
-                }
-            },
-            "status": "active",
-            "createdDate": "2023-09-12T06:51:09.823+00:00",
-            "lastUpdatedDate": null
-        },
-        {
-            "commentId": "c4763cb3-52e7-11ee-99d1-5d367925f667",
-            "commentData": {
-                "file": "file123",
-                "comment": "Noooooooooooooooooooooooo",
-                "commentSource": {
-                  "userId": "dev233",
-                  "userPic": "devPic",
-                  "userName": "dev nair",
-                  "role":"Desktop-Admin"
-                }
-            },
-            "status": "active",
-            "createdDate": "2023-09-14T10:16:28.207+00:00",
-            "lastUpdatedDate": null
-        },
-        {
-            "commentId": "cef4c929-506d-11ee-99d1-1b6e163ce3cf",
-            "commentData": {
-                "file": "file123",
-                "comment": "Ok .. close it then..",
-                "commentSource": {
-                    "userId": "rahul123",
-                    "userPic": "rahulPic",
-                    "userName": "rahul pawar",
-                    "role":"Assessor"
-                }
-            },
-            "status": "active",
-            "createdDate": "2023-09-11T06:38:24.882+00:00",
-            "lastUpdatedDate": null
-        }
-    ],
-    "commentCount": 10
-}
-  return res;
+  );
+};
+
+export const addFirstUserComment = async (postData) => {
+  return  await adminCustomPost.post(
+    API_URL.manageUserComments.addFirst,
+    postData
+  );
 };
 
 

@@ -73,7 +73,7 @@ export default function DesktopAnalysisView() {
   let [isDownloading, setIsDownloading] = useState(false);
   
   
-  const [showAlert, setShowAlert] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [state, setState] = useState({
     alertContent: {
       alertTitle: "",
@@ -364,7 +364,7 @@ export default function DesktopAnalysisView() {
 
   const handleEventTrigger = async (e) => {
    // console.log(e)
-    //setShowAlert(true);
+   // setShowCommentsModal(true);
     setState((prevState) => ({
       ...prevState,
       alertContent: {
@@ -598,8 +598,33 @@ export default function DesktopAnalysisView() {
       } 
     }
     const commentElement = iframeContent.getElementById('comment-section');
-    commentElement?.addEventListener('click', function() {
-      
+    commentElement?.addEventListener('click', function(e) {
+      const element = e.target;
+      let object = {};
+      let answers = [];
+      let closestParent = element?.closest('.question');
+      if(closestParent !== null) {
+       let spanElement = closestParent?.children[0];
+       if(spanElement!== undefined) {
+         let value = spanElement.innerText;
+         console.log("value =>", value);
+         let childrenElem = closestParent?.children;
+         object['question'] = spanElement.innerText;
+         if(childrenElem?.length > 0) {
+         for(let i = 0; i < childrenElem?.length; i++) {
+           if(childrenElem[i]?.name !== undefined) {
+             if(childrenElem[i]?.name?.toLowerCase().includes('/data/d/')) {
+               answers.push(childrenElem[i]?.value);
+             }
+           }
+         }
+       }
+       console.log("answers =>", answers);
+       // let value = spanElement.innerText;
+       object['answer'] = answers[0];
+       console.log("object =>", object);
+       }
+      }
     });
     setSpinner(false);
   };
@@ -645,8 +670,8 @@ export default function DesktopAnalysisView() {
   return (
     <StrictMode>
        
-        {showAlert && (
-          <CommentsModal showAlert={setShowAlert} {...state.alertContent} />
+        {showCommentsModal && (
+          <CommentsModal showCommentsModal={setShowCommentsModal} {...state.alertContent} />
         )}
       <div className="h-[48px] bg-white flex justify-start drop-shadow-sm">
         <div className="container mx-auto flex px-3">

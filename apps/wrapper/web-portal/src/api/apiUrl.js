@@ -1,4 +1,5 @@
 const rest = "rest/";
+const prefix = "v1/comment/";
 
 const API_URL = {
   auth: {
@@ -102,6 +103,11 @@ const API_URL = {
   },
   viewStatus: {
     getViewStatus: `${rest}getEvents`,
+  },
+  manageUserComments: {
+    getAll: `${prefix}getAll`,
+    update:`${prefix}addNew`,
+    addFirst:`${prefix}addFirst`,
   },
   SIGNUP: {
     CREATE_USER: "create",
