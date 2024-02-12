@@ -358,6 +358,12 @@ export default function DesktopAnalysisView() {
     afterFormSubmit(e);
   };
 
+
+  window.onmessage = function(e) {
+    console.log(e);
+    alert("message to parent");
+};
+
   const handleEventTrigger = async (e) => {
    // console.log(e)
    // setShowCommentsModal(true);
@@ -494,7 +500,34 @@ export default function DesktopAnalysisView() {
   };
 
   const addAlert = (e) => {
-  
+   const element = e.target;
+   let object = {};
+   let answers = [];
+   let closestParent = element?.closest('.question');
+   if(closestParent !== null) {
+    let spanElement = closestParent?.children[0];
+    if(spanElement!== undefined) {
+      let value = spanElement.innerText;
+      console.log("value =>", value);
+      let childrenElem = closestParent?.children;
+      object['question'] = spanElement.innerText;
+      if(childrenElem?.length > 0) {
+      for(let i = 0; i < childrenElem?.length; i++) {
+        if(childrenElem[i]?.name !== undefined) {
+          if(childrenElem[i]?.name?.toLowerCase().includes('/data/d/')) {
+            answers.push(childrenElem[i]?.value);
+          }
+        }
+      }
+    }
+    console.log("answers =>", answers);
+    // let value = spanElement.innerText;
+    object['answer'] = answers[0];
+    window.parent.postMessage(JSON.stringify({
+      object: object,
+  }), '*');
+    }
+   }
   }
 
 
@@ -512,6 +545,7 @@ export default function DesktopAnalysisView() {
             let element = document.createElement("i");
             element.setAttribute("class","fa fa-comment");
             element.setAttribute('id', 'comment-section');
+            element.addEventListener('click', addAlert);
             labelElements[i].insertBefore(element, labelElements[i].childNodes[2]);
         }
       }
@@ -564,33 +598,8 @@ export default function DesktopAnalysisView() {
       } 
     }
     const commentElement = iframeContent.getElementById('comment-section');
-    commentElement?.addEventListener('click', function(e) {
-      const element = e.target;
-      let object = {};
-      let answers = [];
-      let closestParent = element?.closest('.question');
-      if(closestParent !== null) {
-       let spanElement = closestParent?.children[0];
-       if(spanElement!== undefined) {
-         let value = spanElement.innerText;
-         console.log("value =>", value);
-         let childrenElem = closestParent?.children;
-         object['question'] = spanElement.innerText;
-         if(childrenElem?.length > 0) {
-         for(let i = 0; i < childrenElem?.length; i++) {
-           if(childrenElem[i]?.name !== undefined) {
-             if(childrenElem[i]?.name?.toLowerCase().includes('/data/d/')) {
-               answers.push(childrenElem[i]?.value);
-             }
-           }
-         }
-       }
-       console.log("answers =>", answers);
-       // let value = spanElement.innerText;
-       object['answer'] = answers[0];
-       console.log("object =>", object);
-       }
-      }
+    commentElement?.addEventListener('click', function() {
+      
     });
     setSpinner(false);
   };
