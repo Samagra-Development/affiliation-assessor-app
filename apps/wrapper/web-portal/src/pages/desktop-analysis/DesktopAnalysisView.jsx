@@ -323,15 +323,19 @@ export default function DesktopAnalysisView() {
  
 
   const handleFormEvents = async (startingForm, afterFormSubmit, e) => {
-    if(typeof e.data === 'string' && e.data.includes('formLoad')) {
+    if(typeof e?.data === 'string' && e?.data.includes('comment-click')) {
+      console.log("Hiee");
+      return;
+    } 
+    if(typeof e?.data === 'string' && e?.data.includes('formLoad')) {
       setFormLoaded(true);
       return;
     }
-    if (typeof e.data === "string" && e.data.includes("webpackHot")) {
+    if (typeof e?.data === "string" && e?.data.includes("webpackHot")) {
       return;
     }
 
-    if (
+    if (e.data &&
       ENKETO_URL === e.origin + "/enketo" &&
       typeof e?.data === "string" &&
       JSON.parse(e?.data)?.state !== "ON_FORM_SUCCESS_COMPLETED" &&
@@ -357,12 +361,6 @@ export default function DesktopAnalysisView() {
     }
     afterFormSubmit(e);
   };
-
-
-  window.onmessage = function(e) {
-    console.log(e);
-    alert("message to parent");
-};
 
   const handleEventTrigger = async (e) => {
    // console.log(e)
@@ -523,9 +521,11 @@ export default function DesktopAnalysisView() {
     console.log("answers =>", answers);
     // let value = spanElement.innerText;
     object['answer'] = answers[0];
-    window.parent.postMessage(JSON.stringify({
-      object: object,
-  }), '*');
+    let record = {
+            instance: 'comment-click',
+            object: object,
+    }
+    window.parent.postMessage(JSON.stringify({record}), '*');
     }
    }
   }
